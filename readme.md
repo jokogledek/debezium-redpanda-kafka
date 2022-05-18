@@ -19,3 +19,9 @@ https://github.com/riferrei/srclient
 ```shell
 rpk topic consume pg_order.public.sb_order --brokers=0.0.0.0:29092
 ```
+
+### set connector config
+after running docker compose, execute this request to upload connector config to debezium connector
+```shell
+curl -i -X POST -H "Accept:application/json" -H "Content-Type:application/json" 127.0.0.1:8083/connectors/ --data "@connector/debezium-connector.json"
+```
