@@ -12,7 +12,7 @@
         "database.user": "postgres",
         "database.password": "1234",
         "database.dbname": "sboms",
-        "database.server.name": "trading-core-order",
+        "database.server.name": "pg_order",
         "table.include.list": "public.sb_order"
     }
 }

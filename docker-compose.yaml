@@ -6,35 +6,41 @@ services:
     container_name: redpanda
     ports:
       - "9092:9092"
-      - "29092:29092"
       - "8081:8081"
       - "8082:8082"
-      - "28082:28082"
     command:
-      - redpanda
-      - start
+      - redpanda start
       - --overprovisioned
-      - --smp
-      - "1"
-      - --memory
-      - "1G"
-      - --reserve-memory
-      - "0M"
-      - --node-id
-      - "0"
-      - --kafka-addr
-      - PLAINTEXT://0.0.0.0:29092,OUTSIDE://0.0.0.0:9092
-      - --advertise-kafka-addr
-      - PLAINTEXT://redpanda:29092,OUTSIDE://redpanda:9092
+      - --smp 1
+      - --memory 1G
+      - --reserve-memory 0M
+      - --node-id 0
       - --check=false
-      - --pandaproxy-addr
-      - PLAINTEXT://0.0.0.0:28082,OUTSIDE://0.0.0.0:8082
-      - --advertise-pandaproxy-addr
-      - PLAINTEXT://redpanda:28082,OUTSIDE://localhost:8082
-  connect:
-    image: debezium/connect
+      - --kafka-addr 0.0.0.0:9092
+      - --advertise-kafka-addr redpanda:9092
+      - --pandaproxy-addr 0.0.0.0:8082
+      - --advertise-pandaproxy-addr redpanda:8082
+      - --set redpanda.enable_transactions=true
+      - --set redpanda.enable_idempotence=true
+      - --set redpanda.auto_create_topics_enabled=true
+    healthcheck: { test: curl -f localhost:9644/v1/status/ready, interval: 1s, start_period: 30s }
+  pg_order:
+    image: debezium/postgres:14
+    container_name: pg_order
+    ports:
+      - 5432:5432
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=1234
+      - POSTGRES_DB=sboms
+    logging:
+      driver: none
+  debezium-1:
+    image: debezium/connect:latest
+    container_name: debezium-1
     depends_on:
       - redpanda
+      - pg_order
     ports:
       - "8083:8083"  
     environment:
@@ -45,10 +51,10 @@ services:
       STATUS_STORAGE_TOPIC: debezium-connect-status
       
       KEY_CONVERTER: io.confluent.connect.avro.AvroConverter
-      CONNECT_KEY_CONVERTER_SCHEMA_REGISTRY_URL: 'http://redpanda:8081,http://redpanda:8082'
+      CONNECT_KEY_CONVERTER_SCHEMA_REGISTRY_URL: 'http://redpanda:8081'
 
       VALUE_CONVERTER: io.confluent.connect.avro.AvroConverter
-      CONNECT_VALUE_CONVERTER_SCHEMA_REGISTRY_URL: 'http://redpanda:8081,http://redpanda:8082'
+      CONNECT_VALUE_CONVERTER_SCHEMA_REGISTRY_URL: 'http://redpanda:8081'
 
       CONNECT_CONFIG_STORAGE_REPLICATION_FACTOR: "1"
       CONNECT_OFFSET_STORAGE_REPLICATION_FACTOR: "1"
@@ -69,14 +75,4 @@ services:
 
       ADVERTISED_HOST_NAME: "debezium-1"
       CONNECT_REST_ADVERTISED_PORT: 8083
-  pg_order:
-    image: debezium/postgres:14
-    container_name: pg_order
-    ports:
-      - 5432:5432
-    environment:
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=1234
-      - POSTGRES_DB=sboms
-    logging:
-      driver: none
+      PLUGIN_PATH: /usr/share/java,/usr/share/confluent-hub-components
