@@ -8,6 +8,9 @@ services:
       - "9092:9092"
       - "8081:8081"
       - "8082:8082"
+      - "33145:33145"
+      - "28082:28082"
+      - "29092:29092"
     command:
       - redpanda start
       - --overprovisioned
@@ -16,10 +19,12 @@ services:
       - --reserve-memory 0M
       - --node-id 0
       - --check=false
-      - --kafka-addr 0.0.0.0:9092
-      - --advertise-kafka-addr redpanda:9092
-      - --pandaproxy-addr 0.0.0.0:8082
-      - --advertise-pandaproxy-addr redpanda:8082
+      - --pandaproxy-addr INSIDE://0.0.0.0:8082,OUTSIDE://0.0.0.0:28082
+      - --advertise-pandaproxy-addr INSIDE://redpanda:8082,OUTSIDE://localhost:28082
+      - --kafka-addr INSIDE://0.0.0.0:9092,OUTSIDE://0.0.0.0:29092
+      - --advertise-kafka-addr INSIDE://redpanda:9092,OUTSIDE://localhost:29092
+      - --rpc-addr 0.0.0.0:33145
+      - --advertise-rpc-addr redpanda:33145
       - --set redpanda.enable_transactions=true
       - --set redpanda.enable_idempotence=true
       - --set redpanda.auto_create_topics_enabled=true

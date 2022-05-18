@@ -13,6 +13,8 @@
         "database.password": "1234",
         "database.dbname": "sboms",
         "database.server.name": "pg_order",
-        "table.include.list": "public.sb_order"
+        "table.include.list": "public.sb_order",
+        "database.history.kafka.bootstrap.servers": "redpanda:9092",
+        "database.history.kafka.topic": "schema-changes.inventory"
     }
 }
