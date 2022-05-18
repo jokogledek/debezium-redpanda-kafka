@@ -2,7 +2,7 @@
     "name": "debezium-connector",
     "config": {
         "decimal.handling.mode":"double",
-        "topic.creation.default.replication.factor": 2,
+        "topic.creation.default.replication.factor": 1,
         "topic.creation.default.partitions": 10,
         "connector.class": "io.debezium.connector.postgresql.PostgresConnector",
         "tasks.max": "10",
@@ -11,10 +11,14 @@
         "database.port": "5432",
         "database.user": "postgres",
         "database.password": "1234",
-        "database.dbname": "sboms",
-        "database.server.name": "pg_order",
-        "table.include.list": "public.sb_order",
+        "database.dbname": "user_db",
+        "database.server.name": "pg_server",
+        "table.include.list": "public.user_transaction",
         "database.history.kafka.bootstrap.servers": "redpanda:9092",
-        "database.history.kafka.topic": "schema-changes.inventory"
+        "database.history.kafka.topic": "schema-changes.inventory",
+        "transforms":"Reroute",
+        "transforms.Reroute.type":"io.debezium.transforms.ByLogicalTableRouter",
+        "transforms.Reroute.topic.regex":"(.*)sb_order(.*)",
+        "transforms.Reroute.topic.replacement":"user_historical_data"
     }
 }
